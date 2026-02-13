@@ -1,6 +1,6 @@
-# Community Summit MYS Exporter
+# MYS Exporter
 
-Small Python tool to fetch proposals from a MYS API, filter fields, redact emails, and export CSV.
+Small Python tool to fetch session proposals from a MYS API, filter fields, redact emails, and export CSV.
 
 Features
 - Fetch JSON from a MYS API endpoint with Basic authentication (username & password)
