@@ -16,7 +16,6 @@ def setup_logging():
 def main():
     setup_logging()
     parser = argparse.ArgumentParser(description="MYS proposals exporter")
-    parser.add_argument("--api-url", help="API URL to fetch", default=None)
     parser.add_argument("--api-user", help="API username", default=None)
     parser.add_argument("--api-pass", help="API password", default=None)
     parser.add_argument("--show-code", help="Show code", default=None)
@@ -28,7 +27,6 @@ def main():
     args = parser.parse_args()
 
     cfg = get_config()
-    api_url = args.api_url or cfg.get("api_url")
     api_username = args.api_user or cfg.get("api_username")
     api_password = args.api_pass or cfg.get("api_password")
     api_show_code = args.show_code or cfg.get("api_show_code")
@@ -38,8 +36,6 @@ def main():
     schedule_cron = args.schedule or cfg.get("schedule_cron")
     schedule_interval = args.interval or cfg.get("schedule_interval")
 
-    if not api_url:
-        raise SystemExit("API URL is required (env MYS_API_BASE_URL or --api-url)")
     if not api_username:
         raise SystemExit("API username is required (env MYS_USERNAME or --api-user)")
     if not api_password:
@@ -48,7 +44,7 @@ def main():
         raise SystemExit("Show code is required (env MYS_SHOW_CODE or --show-code)")
 
     def job():
-        run_export(api_url, api_username, api_password, api_show_code, output, requested_fields if requested_fields else None)
+        run_export(api_username, api_password, api_show_code, output, requested_fields if requested_fields else None)
 
     if args.once or (not schedule_cron and not schedule_interval):
         job()

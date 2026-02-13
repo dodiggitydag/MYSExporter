@@ -9,18 +9,50 @@ EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 logger = logging.getLogger(__name__)
 
 
-def fetch_data(api_url: str, api_username: str, api_password: str, api_show_code: str, params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
-    headers = {}
-    # Use Basic authentication with provided username and password
+def fetch_data(api_username: str, api_password: str, api_show_code: str, params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     import base64
+    
+    # Step 1: Get GUID from Authorize endpoint
+    headers = {}
     credentials = base64.b64encode(f"{api_username}:{api_password}".encode()).decode()
     headers["Authorization"] = f"Basic {credentials}"
-    # Add show code as a parameter
+    headers["Content-Type"] = "application/json"
+    #headers["User-Agent"] = "insomnia/12.3.0"
+
     params = params or {}
     params["showCode"] = api_show_code
-    resp = requests.get(api_url, headers=headers, params=params, timeout=30)
-    resp.raise_for_status()
-    data = resp.json()
+    
+    logger.info("Requesting authorization GUID from Authorize endpoint")
+    auth_resp = requests.get("https://api.mapyourshow.com/mysRest/v2/Authorize", headers=headers, params=params, timeout=30)
+    auth_resp.raise_for_status()
+    auth_data = auth_resp.json()
+    
+    # Extract GUID from response
+    if isinstance(auth_data, list) and len(auth_data) > 0:
+        guid_value = auth_data[0].get("mysGUID")
+    elif isinstance(auth_data, dict):
+        guid_value = auth_data.get("mysGUID")
+    else:
+        raise ValueError("Could not extract GUID from authorization response")
+    
+    if not guid_value:
+        raise ValueError("GUID value is empty from authorization response")
+    
+    logger.info("Obtained GUID: %s", guid_value)
+    
+    # Step 2: Use GUID to fetch data from Sessions/Proposals endpoint
+    data_headers = {
+        "Authorization": f"Bearer {guid_value}",
+        #"User-Agent": "insomnia/12.3.0"
+    }
+    
+    data_params = {"conferenceid": api_show_code}
+    
+    logger.info("Requesting data from Sessions/Proposals endpoint")
+    data_resp = requests.get("https://api.mapyourshow.com/mysRest/v2/Sessions/Proposals", headers=data_headers, params=data_params, timeout=30)
+    data_resp.raise_for_status()
+    data = data_resp.json()
+    
     # Normalise common envelope shapes
     if isinstance(data, dict):
         if "items" in data and isinstance(data["items"], list):
@@ -84,9 +116,9 @@ def export_csv(records: List[Dict[str, Any]], out_path: str, fields: Optional[Li
             writer.writerow({k: (v if v is not None else "") for k, v in r.items()})
 
 
-def run_export(api_url: str, api_username: str, api_password: str, api_show_code: str, output_file: str, requested_fields: Optional[List[str]] = None, params: Optional[Dict[str, Any]] = None) -> None:
-    logger.info("Fetching data from API: %s", api_url)
-    records = fetch_data(api_url, api_username=api_username, api_password=api_password, api_show_code=api_show_code, params=params)
+def run_export(api_username: str, api_password: str, api_show_code: str, output_file: str, requested_fields: Optional[List[str]] = None, params: Optional[Dict[str, Any]] = None) -> None:
+    logger.info("Fetching data from API")
+    records = fetch_data(api_username=api_username, api_password=api_password, api_show_code=api_show_code, params=params)
     logger.info("Fetched %d records", len(records))
     available = detect_available_fields(records)
     logger.info("Available fields (excluding email keys): %s", ", ".join(available))

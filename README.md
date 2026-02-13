@@ -20,7 +20,6 @@ pip install -r requirements.txt
 ```
 
 2. Copy `.env.example` → `.env` and set the required environment variables:
-   - `MYS_API_BASE_URL`: MYS API endpoint URL
    - `MYS_USERNAME`: API username
    - `MYS_PASSWORD`: API password
    - `MYS_SHOW_CODE`: Show code for the conference
