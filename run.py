@@ -17,7 +17,9 @@ def main():
     setup_logging()
     parser = argparse.ArgumentParser(description="MYS proposals exporter")
     parser.add_argument("--api-url", help="API URL to fetch", default=None)
-    parser.add_argument("--api-key", help="API key / token", default=None)
+    parser.add_argument("--api-user", help="API username", default=None)
+    parser.add_argument("--api-pass", help="API password", default=None)
+    parser.add_argument("--show-code", help="Show code", default=None)
     parser.add_argument("--fields", help="Comma-separated fields to export", default=None)
     parser.add_argument("--out", help="Output CSV file", default=None)
     parser.add_argument("--schedule", help="Cron expression to schedule (quotes required)", default=None)
@@ -27,17 +29,20 @@ def main():
 
     cfg = get_config()
     api_url = args.api_url or cfg.get("api_url")
-    api_key = args.api_key or cfg.get("api_key")
+    api_username = args.api_user or cfg.get("api_username")
+    api_password = args.api_pass or cfg.get("api_password")
+    api_show_code = args.show_code or cfg.get("api_show_code")
     output = args.out or cfg.get("output_file")
-    requested_fields = [f.strip() for f in (args.fields or ",".join(cfg.get("fields") or [])).split(",") if f.strip()]
+    requested_fields = (args.fields.split(",") if args.fields else cfg.get("fields") or [])
+    requested_fields = [f.strip() for f in requested_fields if f.strip()]
     schedule_cron = args.schedule or cfg.get("schedule_cron")
     schedule_interval = args.interval or cfg.get("schedule_interval")
 
     if not api_url:
-        raise SystemExit("API URL is required (env API_URL or --api-url)")
+        raise SystemExit("API URL is required (env MYS_API_BASE_URL or --api-url)")
 
     def job():
-        run_export(api_url, api_key, output, requested_fields if requested_fields else None)
+        run_export(api_url, api_username, api_password, api_show_code, output, requested_fields if requested_fields else None)
 
     if args.once or (not schedule_cron and not schedule_interval):
         job()

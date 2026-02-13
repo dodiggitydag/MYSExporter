@@ -9,10 +9,15 @@ EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 logger = logging.getLogger(__name__)
 
 
-def fetch_data(api_url: str, api_key: Optional[str] = None, params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+def fetch_data(api_url: str, api_username: str, api_password: str, api_show_code: str, params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     headers = {}
-    if api_key:
-        headers["Authorization"] = f"Bearer {api_key}"
+    # Use Basic authentication with provided username and password
+    import base64
+    credentials = base64.b64encode(f"{api_username}:{api_password}".encode()).decode()
+    headers["Authorization"] = f"Basic {credentials}"
+    # Add show code as a parameter
+    params = params or {}
+    params["showCode"] = api_show_code
     resp = requests.get(api_url, headers=headers, params=params, timeout=30)
     resp.raise_for_status()
     data = resp.json()
@@ -79,9 +84,9 @@ def export_csv(records: List[Dict[str, Any]], out_path: str, fields: Optional[Li
             writer.writerow({k: (v if v is not None else "") for k, v in r.items()})
 
 
-def run_export(api_url: str, api_key: Optional[str], output_file: str, requested_fields: Optional[List[str]] = None, params: Optional[Dict[str, Any]] = None) -> None:
+def run_export(api_url: str, api_username: str, api_password: str, api_show_code: str, output_file: str, requested_fields: Optional[List[str]] = None, params: Optional[Dict[str, Any]] = None) -> None:
     logger.info("Fetching data from API: %s", api_url)
-    records = fetch_data(api_url, api_key=api_key, params=params)
+    records = fetch_data(api_url, api_username=api_username, api_password=api_password, api_show_code=api_show_code, params=params)
     logger.info("Fetched %d records", len(records))
     available = detect_available_fields(records)
     logger.info("Available fields (excluding email keys): %s", ", ".join(available))
