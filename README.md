@@ -3,7 +3,7 @@
 Small Python tool to fetch proposals from a MYS API, filter fields, redact emails, and export CSV.
 
 Features
-- Fetch JSON from an API endpoint (supports Bearer token)
+- Fetch JSON from a MYS API endpoint with Basic authentication (username & password)
 - Detect available fields and optionally filter by requested fields
 - Remove any columns named like `email` and redact email-like values
 - Export results to CSV
@@ -19,7 +19,11 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-2. Copy `.env.example` → `.env` and set `API_URL` and `API_KEY`.
+2. Copy `.env.example` → `.env` and set the required environment variables:
+   - `MYS_API_BASE_URL`: MYS API endpoint URL
+   - `MYS_USERNAME`: API username
+   - `MYS_PASSWORD`: API password
+   - `MYS_SHOW_CODE`: Show code for the conference
 
 3. Run once:
 

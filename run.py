@@ -40,6 +40,12 @@ def main():
 
     if not api_url:
         raise SystemExit("API URL is required (env MYS_API_BASE_URL or --api-url)")
+    if not api_username:
+        raise SystemExit("API username is required (env MYS_USERNAME or --api-user)")
+    if not api_password:
+        raise SystemExit("API password is required (env MYS_PASSWORD or --api-pass)")
+    if not api_show_code:
+        raise SystemExit("Show code is required (env MYS_SHOW_CODE or --show-code)")
 
     def job():
         run_export(api_url, api_username, api_password, api_show_code, output, requested_fields if requested_fields else None)
