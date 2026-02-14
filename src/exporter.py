@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def fetch_data(api_username: str, api_password: str, api_show_code: str, params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    user_agent = "mysexporter/1.0.0"
     import base64
     
     # Step 1: Get GUID from Authorize endpoint
@@ -17,7 +18,7 @@ def fetch_data(api_username: str, api_password: str, api_show_code: str, params:
     credentials = base64.b64encode(f"{api_username}:{api_password}".encode()).decode()
     headers["Authorization"] = f"Basic {credentials}"
     headers["Content-Type"] = "application/json"
-    #headers["User-Agent"] = "insomnia/12.3.0"
+    headers["User-Agent"] = user_agent
 
     params = params or {}
     params["showCode"] = api_show_code
@@ -43,7 +44,7 @@ def fetch_data(api_username: str, api_password: str, api_show_code: str, params:
     # Step 2: Use GUID to fetch data from Sessions/Proposals endpoint
     data_headers = {
         "Authorization": f"Bearer {guid_value}",
-        #"User-Agent": "insomnia/12.3.0"
+        "User-Agent": user_agent,
     }
     
     data_params = {"conferenceid": api_show_code}
@@ -53,18 +54,10 @@ def fetch_data(api_username: str, api_password: str, api_show_code: str, params:
     data_resp.raise_for_status()
     data = data_resp.json()
     
-    # Normalise common envelope shapes
-    if isinstance(data, dict):
-        if "items" in data and isinstance(data["items"], list):
-            return data["items"]
-        if "data" in data and isinstance(data["data"], list):
-            return data["data"]
-        # If top-level dict with numeric keys or single object, wrap
-        # If it's a single record dict, return [data]
-        # Heuristic: if there are keys and none are lists of dicts, return [data]
-        return [data]
-    if isinstance(data, list):
-        return data
+    if isinstance(data, list) and len(data) == 1:
+        if "proposals" in data[0] and isinstance(data[0]["proposals"], list):
+            return data[0]["proposals"]
+
     # Fallback
     return []
 
