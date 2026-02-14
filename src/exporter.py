@@ -120,6 +120,26 @@ def run_export(api_username: str, api_password: str, api_show_code: str, output_
         fields = [f for f in requested_fields if f in available]
     else:
         fields = available
+    
+    # Don't need this column no matter what
+    if "conferenceid" in fields:
+        fields.remove("conferenceid")
+    
+    # Make proposalid the first column if it exists
+    if "proposalid" in fields:
+        fields.remove("proposalid")
+        fields.insert(0, "proposalid")
+
+    if "type" in fields:
+        fields.remove("type")
+        fields.insert(1, "type")
+    if "title" in fields:
+        fields.remove("title")
+        fields.insert(1, "title")
+    if "track" in fields:
+        fields.remove("track")
+        fields.insert(1, "track")
+
     filtered = filter_and_sanitize(records, fields)
     export_csv(filtered, output_file, fields)
     logger.info("Exported %d records to %s", len(filtered), output_file)
