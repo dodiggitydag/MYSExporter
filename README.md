@@ -42,3 +42,12 @@ Files
 - **src/exporter.py**: core export logic
 - **src/config.py**: environment/config loader
 - **run.py**: CLI and scheduler
+
+4. Run once (again)
+
+From a fresh PowerShell or CommandPrompt:
+
+```bash
+.venv\\Scripts\\activate  # Windows
+python run.py --once
+```

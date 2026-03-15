@@ -3,6 +3,7 @@ import csv
 import re
 import logging
 from typing import List, Dict, Any, Optional
+from .merger import merge_sessions
 
 EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 
@@ -158,7 +159,7 @@ def transform_proposals_dataframe(
         s = ihtml.unescape(s)
         s = re.sub(r"(?is)<(script|style).*?>.*?</\\1>", " ", s)
         s = re.sub(r"(?s)<[^>]*>", " ", s)
-        s = re.sub(r"\\s+", " ", s).strip()
+        s = re.sub(r"\s+", " ", s).strip()
         return s if s else np.nan
 
     def drop_fully_empty_columns(df):
@@ -242,7 +243,7 @@ def export_csv(records: List[Dict[str, Any]], out_path: str, fields: Optional[Li
 
 
 def run_export(api_username: str, api_password: str, api_show_code: str, output_file: str, requested_fields: Optional[List[str]] = None, params: Optional[Dict[str, Any]] = None) -> None:
-    """Main function to run the export process. Fetches data from API, processes it, and saves to CSV."""
+    """Main function to run the export process. Fetches data from API, processes it, and merges into an XLSX workbook."""
     logger.info("Fetching data from API")
     records = fetch_data(api_username=api_username, api_password=api_password, api_show_code=api_show_code, params=params)
     logger.info("Fetched %d records", len(records))
@@ -296,8 +297,10 @@ def run_export(api_username: str, api_password: str, api_show_code: str, output_
         "alpha"
     ]
     df = transform_proposals_dataframe(df, json_cols=json_cols, html_col=html_col, remove_cols=remove_cols)
-    # Save to CSV
-    df.to_csv(output_file, index=False, encoding="utf-8-sig")
-    logger.info("Exported %d records to %s", len(df), output_file)
+    # Merge into existing XLSX (or create on first run)
+    records = df.fillna("").to_dict(orient="records")
+    stats = merge_sessions(records, output_file)
+    print(f"Sync complete: {stats}")
+    logger.info("Sync complete: %s", stats)
 
 

@@ -3,3 +3,4 @@ APScheduler>=3.10
 python-dotenv>=1.0
 pandas>=1.5
 numpy>=1.23
+openpyxl>=3.1
