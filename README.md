@@ -6,8 +6,9 @@ Features
 - Fetch JSON from a MYS API endpoint with Basic authentication (username & password)
 - Detect available fields and optionally filter by requested fields
 - Remove any columns named like `email` and redact email-like values
-- Export results to CSV
+- Export results to XLSX
 - Optional scheduled runs via APScheduler (cron or interval)
+- You can run this multiple times and it will update OUTPUT_FILE with the latest data from the API and ignore the user-created columns
 
 Quick start
 

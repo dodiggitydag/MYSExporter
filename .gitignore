@@ -5,5 +5,5 @@ __pycache__/
 *.pyd
 env/
 .env
-proposals.csv
+proposals.xlsx
 TEST.py
